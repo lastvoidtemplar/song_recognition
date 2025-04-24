@@ -38,7 +38,7 @@ func NewWavParser(wavPath string, logger *slog.Logger) (*WavParser, error) {
 }
 
 func (parser *WavParser) Close() error {
-	slog.With(slog.String("wav_path", parser.wavPath)).Info("The file is closed")
+	slog.With(slog.String("wav_path", parser.wavPath)).Debug("The file is closed")
 	return parser.wavFile.Close()
 }
 
