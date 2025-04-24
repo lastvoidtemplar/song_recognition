@@ -1,11 +1,13 @@
 package internal
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"iter"
 	"log/slog"
 	"os"
+	"os/exec"
 )
 
 type wavHeader struct {
@@ -149,4 +151,44 @@ func (parser *WavParser) NewWindowIter(windowSize int, hopSize int, logger *slog
 			pos = copy(window[:pos], temp)
 		}
 	}, nil
+}
+
+var ErrInvalidPathFormat = errors.New("invalid path format")
+
+func ConvertWebmToWav(webmPath string, logger *slog.Logger) (string, error) {
+	logger = logger.With(slog.String("webmPath", webmPath))
+
+	_, err := os.Stat(webmPath)
+	if err != nil {
+		logger.With(slog.String("err", err.Error())).Error("The file does not exist")
+		return "", err
+	}
+
+	webPathBytes := []byte(webmPath)
+	extInd := bytes.LastIndexByte(webPathBytes, '.')
+
+	if extInd == -1 {
+		logger.Error("Invalid path format")
+		return "", ErrInvalidPathFormat
+	}
+
+	dest := string(webPathBytes[:extInd]) + ".wav"
+
+	cmd := exec.Command(
+		"ffmpeg",
+		"-i",
+		webmPath,
+		"-ar", "48000",
+		"-ac", " 1",
+		dest,
+	)
+
+	_, err = cmd.Output()
+
+	if err != nil {
+		logger.With(slog.String("err", err.Error())).Error("The coverting of webm to wav failed")
+		return "", err
+	}
+
+	return dest, nil
 }

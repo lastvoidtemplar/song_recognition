@@ -43,7 +43,7 @@ func NewYtDlpDownloader(outputDir string, logger *slog.Logger) (YouTubeDownloade
 	}, nil
 }
 
-func validateUrl(rawUrl string) bool {
+func ValidateUrl(rawUrl string) bool {
 	u, err := url.ParseRequestURI(rawUrl)
 
 	if err != nil {
@@ -60,7 +60,7 @@ func validateUrl(rawUrl string) bool {
 func (downloader *ytdlpDownloader) DownloadWav(rawUrl string, logger *slog.Logger) (string, error) {
 	logger = logger.With(slog.String("url", rawUrl))
 
-	if !validateUrl(rawUrl) {
+	if !ValidateUrl(rawUrl) {
 		logger.Debug("Invalid download youtube url")
 		return "", ErrInvalidDownloadUrl
 	}
