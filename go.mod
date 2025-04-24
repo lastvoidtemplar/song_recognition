@@ -1,4 +1,4 @@
-module github.com/lastvoidtemplar/sabbac
+module github.com/lastvoidtemplar/song_recognition
 
 go 1.24.0
 

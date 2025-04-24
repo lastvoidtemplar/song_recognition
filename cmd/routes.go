@@ -11,7 +11,7 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
-	"github.com/lastvoidtemplar/sabbac/internal"
+	"github.com/lastvoidtemplar/song_recognition/internal"
 )
 
 type SongDTO struct {

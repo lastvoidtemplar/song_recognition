@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lastvoidtemplar/sabbac/internal"
+	"github.com/lastvoidtemplar/song_recognition/internal"
 )
 
 func main() {
