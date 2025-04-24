@@ -1,5 +1,8 @@
 .vscode
+
 venv
+
 *.wav
 *.jpg
-db.sqlite
+
+db.sqlite*

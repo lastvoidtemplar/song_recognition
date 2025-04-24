@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS fingerprints (
     FOREIGN KEY(song_id) REFERENCES songs(song_id)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS fingerprints_hash_key ON fingerprints(hash_key);
+CREATE INDEX IF NOT EXISTS fingerprints_hash_key ON fingerprints(hash_key);
