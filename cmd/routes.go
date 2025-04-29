@@ -49,6 +49,11 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 
 			spectrogram, timePerColm := internal.STFT(wavPath, logger)
 
+			err = os.Remove(wavPath)
+			if err != nil {
+				logger.With(slog.String("wav_path", wavPath), slog.String("err", err.Error())).Warn("Failed to delete the .wav")
+			}
+
 			fingerprints := internal.GenerateFingerprints(spectrogram, timePerColm)
 
 			songId, err := db.InsertSong(dto.SongId, logger)
@@ -121,6 +126,12 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 		}
 
 		spectrogram, timePerColm := internal.STFT(wavPath, logger)
+
+		err = os.Remove(wavPath)
+		if err != nil {
+			logger.With(slog.String("wav_path", wavPath), slog.String("err", err.Error())).Warn("Failed to delete the .wav")
+		}
+
 		recordingFingerprints := internal.GenerateFingerprints(spectrogram, timePerColm)
 
 		dbFingerprints, err := db.SearchFingerprints(slices.Collect(maps.Keys(recordingFingerprints)), logger)
