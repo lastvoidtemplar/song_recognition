@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Song Recognition</title>
+    <link rel="stylesheet" href="navbar.css" />
+    <link rel="stylesheet" href="songs.css" />
+    <script type="module" src="songs.js"></script>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/songs.html">Songs</a>
+        <a href="/match.html">Match</a>
+      </nav>
+    </header>
+    <main>
+      <div id="song-wrapper">
+        <div id="songs-header">
+          <h1 hidden>Song Database</h1>
+          <button id="open-dialog" hidden>Add a row</button>
+        </div>
+        <div id="spinner" hidden></div>
+        <table id="songs" hidden>
+          <thead>
+            <th>№</th>
+            <th>Title</th>
+            <th>URL</th>
+          </thead>
+          <tbody id="songs-body">
+            <tr></tr>
+          </tbody>
+        </table>
+        <div id="pager" hidden></div>
+        <p id="error-display"></p>
+      </div>
+      <dialog id="songs-dialog">
+        <div id="dialog-wrapper">
+          <h1>Add song by youtube url</h1>
+          <input type="url" />
+          <div id="dialog-btns">
+            <button id="add-song">Add</button>
+            <button id="close-dialog">Close</button>
+          </div>
+        </div>
+      </dialog>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,267 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --h1-font-size: 2.25rem;
+  --open-dialog-font-size: 1.5rem;
+  --table-font-size: 1.25rem;
+  --pager-font-size: 1.5rem;
+  --dialog-input-font-size: 1.25rem;
+  --dialog-btns-font-size: 1.5rem;
+
+  --pager-btn-horizontal-padding: 16px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --h1-font-size: 1.5rem;
+    --open-dialog-font-size: 1rem;
+    --table-font-size: 0.675rem;
+    --pager-font-size: 0.875rem;
+    --dialog-input-font-size: 0.75rem;
+    --dialog-btns-font-size: 0.875rem;
+
+    --pager-btn-horizontal-padding: 8px;
+  }
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+main {
+  width: 100%;
+  flex: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#songs-header {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-around;
+  align-items: end;
+}
+
+h1 {
+  font-size: var(--h1-font-size);
+  font-weight: bolder;
+  color: #009879;
+}
+
+#open-dialog {
+  font-size: var(--open-dialog-font-size);
+  font-weight: bolder;
+  color: #ffffff;
+
+  background-color: #009879;
+
+  border-width: 0;
+  border-radius: 5px;
+
+  padding: 0.5rem 1rem;
+}
+
+#song-wrapper {
+  width: min(95%, 50rem);
+  height: min(95%, 1300px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  position: relative;
+}
+
+#error-display {
+  color: crimson;
+  font-size: var(--pager-font-size);
+  font-weight: bolder;
+}
+
+#spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+
+  z-index: 2;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  animation: spinner-rotate 1s linear infinite;
+}
+
+#spinner::before,
+#spinner::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  animation: spinner-prixClipFix 2s linear infinite;
+}
+
+#spinner::before {
+  border-color: black;
+}
+
+#spinner::after {
+  transform: rotate3d(90, 90, 0, 180deg);
+  border-color: #009879;
+}
+
+@keyframes spinner-rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes spinner-prixClipFix {
+  0% {
+    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+  50% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+  }
+  75%,
+  100% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+  }
+}
+
+#songs {
+  border-collapse: collapse;
+  font-size: var(--table-font-size);
+  font-family: sans-serif;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+
+  overflow: scroll;
+}
+
+#songs thead tr {
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+}
+
+#songs th,
+#songs td {
+  padding: 12px 15px;
+}
+
+#songs tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+#songs tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+#songs tbody tr:last-of-type {
+  border-bottom: 2px solid #009879;
+}
+
+#pager {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+#pager button {
+  color: black;
+  font-size: var(--pager-font-size);
+  float: left;
+  padding: 8px var(--pager-btn-horizontal-padding);
+  text-decoration: none;
+  border: 0;
+  border-radius: 5px;
+}
+
+#pager button.active {
+  background-color: #009879;
+  color: white;
+}
+
+#pager button:hover:not(.active) {
+  background-color: #ddd;
+}
+
+#pager p {
+  font-size: var(--pager-font-size);
+}
+
+#songs-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: min(95%, 50rem);
+  padding: 1rem 0;
+  border: 0;
+}
+
+#songs-dialog::backdrop {
+  background: black;
+  opacity: 0.5;
+}
+
+#dialog-wrapper {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+#songs-dialog input {
+  width: min(90%, 35rem);
+
+  padding: 0.5rem;
+  font-size: var(--dialog-input-font-size);
+}
+
+#dialog-btns {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+#dialog-btns button {
+  font-size: var(--dialog-btns-font-size);
+  font-weight: bolder;
+  color: #ffffff;
+
+  background-color: #009879;
+
+  border-width: 0;
+  border-radius: 5px;
+
+  padding: 0.5rem 1rem;
+}

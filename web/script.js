@@ -9,7 +9,7 @@ btnAddSong.addEventListener("click", async () => {
   const res = await fetch("/song", {
     method: "POST",
     body: JSON.stringify({
-      song_id: url,
+      song_url: url,
     }),
   });
 

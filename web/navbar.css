@@ -1,0 +1,24 @@
+:root {
+  --nav-font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --nav-font-size: 1.125rem;
+  }
+}
+
+header{
+    width: 100%;
+}
+
+nav{
+  top: 0;
+  border: solid 0.5rem black;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: var(--nav-font-size);
+
+  display: flex;
+  justify-content: space-evenly;
+}
