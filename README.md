@@ -14,6 +14,26 @@ The main features include:
 -   🎙️ Listening for 20 seconds of audio input to recognize the song
 -   🌐 Simple web interface for interaction
 
+## UI
+
+### Desktop
+
+<p align="center">
+  <img src="docs/songs_page_desktop.png" width="45%" />
+  <img src="docs/songs_page_add_song_desktop.png" width="45%" /><br>
+  <img src="docs/match_page_recording_desktop.png" width="45%" />
+  <img src="docs/match_page_song_display_desktop.png" width="45%" />
+</p>
+
+### Mobile
+
+<p align="center">
+  <img src="docs/songs_page_mobile.png" width="22.5%" />
+  <img src="docs/songs_page_add_song_mobile.png" width="22.5%" />
+  <img src="docs/match_page_recording_mobile.png" width="22.5%" />
+  <img src="docs/match_page_song_display_mobile.png" width="22.5%" />
+</p>
+
 ## 🧩 Dependencies
 
 This application relies on two external tools:
