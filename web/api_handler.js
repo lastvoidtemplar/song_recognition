@@ -16,7 +16,7 @@ export class ApiHandler {
   constructor(endpoint, method, body = undefined, timeoutInterval = 5000) {
     this.#endpoint = endpoint;
     this.#method = method;
-    this.#body = body;
+    this.#body = JSON.stringify(body);
     this.#timeoutInterval = timeoutInterval;
     this.#countRetries = 0;
     this.#isFetching = false;
@@ -82,6 +82,12 @@ export class ApiHandler {
           }
         }
         if (err instanceof SyntaxError) {
+          if (200 <= this.#statusCode && this.#statusCode <= 299) {
+            typeof this.#successCallback === "function" &&
+              this.#successCallback(undefined);
+            return
+          }
+
           typeof this.#failCallback === "function" && this.#failCallback(err);
           this.#isFetching = false;
           return;

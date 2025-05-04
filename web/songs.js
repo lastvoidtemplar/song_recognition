@@ -1,20 +1,26 @@
 import { ApiHandler } from "./api_handler.js";
 
-const songsHeader = document.getElementById("songs-header")
-const openDialogButton = document.getElementById("open-dialog")
+const songsHeader = document.getElementById("songs-header");
+const openDialogButton = document.getElementById("open-dialog");
 const songsTable = document.getElementById("songs");
 const songsTableBody = document.getElementById("songs-body");
 const pager = document.getElementById("pager");
 const spinner = document.getElementById("spinner");
 const errorDisplay = document.getElementById("error-display");
-const songsDialog = document.getElementById("songs-dialog")
-const addSongBtn = document.getElementById("add-song")
+const songsDialog = document.getElementById("songs-dialog");
+const songUrlInput = document.getElementById("song-url");
+const addSongBtn = document.getElementById("add-song");
+const errorDialog = document.getElementById("error-dialog")
 
-const url = new URL("/songs", window.location.origin);
+const apiUrl = window.location.origin
+const limit = 14
+const url = new URL("/songs", apiUrl);
+
 const params = {
   page: 1,
-  limit: 14,
+  limit: limit,
 };
+
 Object.entries(params).forEach(([key, value]) => {
   url.searchParams.append(key, value);
 });
@@ -31,12 +37,12 @@ songsHandler.onSuccess((data) => {
   songsTable.hidden = false;
   pager.hidden = false;
 
-  renderSongsTable(data.songs, 1);
+  renderSongsTable(data.songs, data.limit);
 
   const pageCount = Math.ceil(data.total / data.limit);
 
   renderPager(1, pageCount);
-  renderSongHeaders()
+  renderSongHeaders();
 });
 
 songsHandler.onError((statusCode, err) => {
@@ -51,14 +57,18 @@ songsHandler.onFail((err) => {
 
 songsHandler.initiateFetch();
 
-function renderSongsTable(songs, num) {
+function renderSongsTable(songs, limit) {
   songsTableBody.innerHTML = "";
-
-  for (const song of songs) {
+  
+  for (let i = 0; i < limit; i++) {
     const node = document.createElement("tr");
-    node.innerHTML = `<td>${num}.</td><td>${song.song_title}</td><td>${song.song_url}</td>`;
+    if (i < songs.length) {
+      const song = songs[i];
+      node.innerHTML = `<td>${song.song_id}.</td><td>${song.song_title}</td><td>${song.song_url}</td>`;
+    }else{
+      node.innerHTML = "<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>"
+    }
     songsTableBody.append(node);
-    num++;
   }
 }
 
@@ -125,9 +135,9 @@ function createOnClick(num) {
     });
     const params = {
       page: num,
-      limit: 14,
+      limit: limit,
     };
-    const url = new URL("/songs", window.location.origin);
+    const url = new URL("/songs", apiUrl);
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
@@ -145,7 +155,7 @@ function createOnClick(num) {
       songsTable.style.opacity = 1;
 
       const num = (data.page - 1) * data.limit + 1;
-      renderSongsTable(data.songs, num);
+      renderSongsTable(data.songs, data.limit);
 
       const pageCount = Math.ceil(data.total / data.limit);
 
@@ -155,11 +165,39 @@ function createOnClick(num) {
   };
 }
 
-function renderSongHeaders(){
-  songsHeader.childNodes.forEach(el=>el.hidden = false)
-  openDialogButton.onclick = ()=>{
+function renderSongHeaders() {
+  songsHeader.childNodes.forEach((el) => (el.hidden = false));
+  openDialogButton.onclick = () => {
     console.log("open");
-    
-    songsDialog.showModal()
+
+    songsDialog.showModal();
+  };
+}
+
+songsDialog.onclick = (e)=>{
+  if (e.target === songsDialog){
+    errorDialog.innerText = ""
+    errorDialog.hidden = true
+    songsDialog.close()
   }
+}
+
+addSongBtn.onclick = ()=>{
+  const songUrl = songUrlInput.value
+
+  const addSongHandler = new ApiHandler("/songs", "post", {
+    song_url: songUrl
+  })
+
+  addSongHandler.onSuccess((data)=>{
+    console.log("Uploaded");
+    songsDialog.close()
+  })
+
+  addSongHandler.onError((_, resp)=>{
+    errorDialog.innerText = resp.error
+    errorDialog.hidden = false
+  })
+  
+  addSongHandler.initiateFetch()
 }

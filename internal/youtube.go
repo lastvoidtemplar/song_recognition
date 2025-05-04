@@ -15,7 +15,7 @@ var ErrInvalidDirPath = errors.New("invalid directory")
 var ErrUnsuccessfulDownload = errors.New("unsuccessful download")
 
 type YouTubeDownloader interface {
-	DownloadWav(url string, logger *slog.Logger) (string, error)
+	DownloadWav(url string, logger *slog.Logger) (string, string, error)
 }
 
 type ytdlpDownloader struct {
@@ -57,16 +57,27 @@ func ValidateUrl(rawUrl string) bool {
 	return true
 }
 
-func (downloader *ytdlpDownloader) DownloadWav(rawUrl string, logger *slog.Logger) (string, error) {
-	logger = logger.With(slog.String("url", rawUrl))
+func StripUrl(raw string) (string, bool) {
+	u, err := url.ParseRequestURI(raw)
 
+	if err != nil {
+		return "", false
+	}
+
+	u.RawQuery = ""
+	return u.String(), true
+}
+
+func (downloader *ytdlpDownloader) DownloadWav(rawUrl string, logger *slog.Logger) (string, string, error) {
 	if !ValidateUrl(rawUrl) {
 		logger.Debug("Invalid download youtube url")
-		return "", ErrInvalidDownloadUrl
+		return "", "", ErrInvalidDownloadUrl
 	}
 
 	cmd := exec.Command(
 		"venv/bin/yt-dlp",
+		"--print", `"%(title)s"`,
+		"--print", `after_move:"%(filepath)s"`,
 		"-x",
 		"--audio-format", "wav",
 		"-o", filepath.Join(downloader.outputDir, "%(title)s.%(ext)s"),
@@ -77,31 +88,24 @@ func (downloader *ytdlpDownloader) DownloadWav(rawUrl string, logger *slog.Logge
 	cmdOutput, err := cmd.Output()
 	if err != nil {
 		logger.With(slog.String("err", err.Error())).Error("YtDlp failed")
-		return "", ErrUnsuccessfulDownload
+		return "", "", ErrUnsuccessfulDownload
 	}
 
-	ind1 := bytes.LastIndexByte(cmdOutput[:len(cmdOutput)-1], '\n')
-	if ind1 == -1 {
+	// skip last newline with len
+	ind := bytes.IndexByte(cmdOutput, '\n')
+	if ind == -1 {
 		logger.With(slog.String("ytdlp_output", string(cmdOutput))).Error("No new line found")
-		return "", ErrUnsuccessfulDownload
+		return "", "", ErrUnsuccessfulDownload
 	}
 
-	ind2 := bytes.LastIndexByte(cmdOutput[:ind1], '\n')
-	if ind2 == -1 {
-		logger.With(slog.String("ytdlp_output", string(cmdOutput))).Error("No new line found")
-		return "", ErrUnsuccessfulDownload
-	}
+	title := string(cmdOutput[1 : ind-1])
+	// skip last newline with len
+	outputPath := string(cmdOutput[ind+2 : len(cmdOutput)-2])
 
-	destinationOutput := cmdOutput[ind2+1 : ind1]
+	logger.With(
+		slog.String("title", title),
+		slog.String("output_path", outputPath),
+	).Debug("Successful audio download")
 
-	ind3 := bytes.IndexByte(destinationOutput, ':')
-	if ind3 == -1 {
-		logger.With(slog.String("dest_output", string(destinationOutput))).Error("No colon found")
-		return "", ErrUnsuccessfulDownload
-	}
-
-	outputPath := string(destinationOutput[ind3+2:])
-	logger.With(slog.String("output_path", outputPath)).Debug("Successful audio download")
-
-	return outputPath, nil
+	return title, outputPath, nil
 }

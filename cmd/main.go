@@ -24,7 +24,8 @@ func main() {
 
 	fs := http.FileServer(http.Dir("web"))
 
-	http.HandleFunc("POST /song", createAddSongHandler(downloader, db, logger))
+	http.HandleFunc("GET /songs", createGetSongsPaginationHandler(db, logger))
+	http.HandleFunc("POST /songs", createAddSongHandler(downloader, db, logger))
 	http.HandleFunc("POST /match", createMatchSongHandler("uploads", db, logger))
 
 	http.Handle("/", http.StripPrefix("/", fs))

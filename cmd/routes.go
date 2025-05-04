@@ -9,13 +9,95 @@ import (
 	"os"
 	"path"
 	"slices"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/lastvoidtemplar/song_recognition/internal"
 )
 
-type SongDTO struct {
-	SongId string `json:"song_id"`
+const InternalServerErrorMsg = "Internal error occured"
+
+type ViewSongsDTO struct {
+	Songs []ViewSongDTO `json:"songs"`
+	Page  int           `json:"page"`
+	Limit int           `json:"limit"`
+	Total int           `json:"total"`
+}
+
+type ViewSongDTO struct {
+	SongId    int    `json:"song_id"`
+	SongTitle string `json:"song_title"`
+	SongUrl   string `json:"song_url"`
+}
+
+func createGetSongsPaginationHandler(db *internal.DB, logger *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reqId := generateReqId()
+		logger := logger.With(slog.String("request_id", reqId))
+
+		query := r.URL.Query()
+		page := 1
+		limit := 14
+
+		if t := query.Get("page"); t != "" {
+			i, err := strconv.Atoi(t)
+			if err == nil && 0 < i {
+				page = i
+			}
+		}
+
+		if t := query.Get("limit"); t != "" {
+			i, err := strconv.Atoi(t)
+			if err == nil && 0 < i {
+				limit = i
+			}
+		}
+
+		count, err := db.GetSongsCount(logger)
+		if err != nil {
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		songs, err := db.GetSongsPagination(page, limit, logger)
+		if err != nil {
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		dto := ViewSongsDTO{
+			Songs: make([]ViewSongDTO, len(songs)),
+			Page:  page,
+			Limit: limit,
+			Total: count,
+		}
+
+		for i, song := range songs {
+			dto.Songs[i].SongId = song.SongId
+			dto.Songs[i].SongTitle = song.SongTitle
+			dto.Songs[i].SongUrl = song.SongUrl
+		}
+
+		logger.With(
+			slog.Int("page", page),
+			slog.Int("limit", limit),
+		).Debug("Get paginated songs successfully")
+
+		respBody, err := json.Marshal(dto)
+		if err != nil {
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			logger.With(
+				slog.String("err", err.Error()),
+			).Warn("Error while handling a get paginated song request")
+			return
+		}
+
+		w.Write(respBody)
+	}
+}
+
+type AddSongDTO struct {
+	SongUrl string `json:"song_url"`
 }
 
 func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB, logger *slog.Logger) http.HandlerFunc {
@@ -23,27 +105,48 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 		reqId := generateReqId()
 		logger = logger.With(slog.String("request_id", reqId))
 
-		var dto SongDTO
+		var dto AddSongDTO
 
 		err := json.NewDecoder(r.Body).Decode(&dto)
 
 		if err != nil {
 			logger.Debug(err.Error())
-			http.Error(w, "Invalid json format", http.StatusBadRequest)
+			sendError(w, "Invalid json format", http.StatusBadRequest)
 			return
 		}
 
-		if !internal.ValidateUrl(dto.SongId) {
-			logger.With(slog.String("url", dto.SongId)).Debug("Invalid song id")
-			http.Error(w, "Invalid song id", http.StatusBadRequest)
+		if !internal.ValidateUrl(dto.SongUrl) {
+			logger.With(slog.String("url", dto.SongUrl)).Debug("Invalid song url")
+			sendError(w, "Invalid song url", http.StatusBadRequest)
 			return
 		}
+
+		url, _ := internal.StripUrl(dto.SongUrl)
+
+		found, err := db.CheckSongByUrl(url, logger)
+
+		if err != nil {
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			logger.With(
+				slog.String("url", url),
+				slog.String("err", err.Error()),
+			).Warn("Error while adding a song")
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		if found {
+			logger.With(slog.String("url", url)).Debug("This song already exists")
+			sendError(w, "This song already exists", http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
 
 		go func() {
-			logger = logger.With(slog.String("url", dto.SongId))
-			wavPath, err := downloader.DownloadWav(dto.SongId, logger)
+			logger = logger.With(slog.String("url", url))
+			title, wavPath, err := downloader.DownloadWav(url, logger)
 			if err != nil {
-				logger.With(slog.String("err", err.Error())).Warn("Error while downloading a song")
 				return
 			}
 
@@ -56,10 +159,9 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 
 			fingerprints := internal.GenerateFingerprints(spectrogram, timePerColm)
 
-			songId, err := db.InsertSong(dto.SongId, logger)
+			songId, err := db.InsertSong(title, url, logger)
 
 			if err != nil {
-				logger.With(slog.String("err", err.Error())).Warn("Error while inserting a song")
 				return
 			}
 
@@ -69,7 +171,6 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 				err = db.InsertFingerprint(hash, songId, timestamp, logger)
 
 				if err != nil {
-					logger.With(slog.String("err", err.Error())).Warn("Error while inserting a fingerprint")
 					return
 				}
 			}
@@ -153,7 +254,7 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 			}
 		}
 
-		songUrl, err := db.GetSongUrl(matchSongId, logger)
+		song, err := db.GetSongById(matchSongId, logger)
 
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Warn("Failed to get song url from song id")
@@ -161,10 +262,23 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 			return
 		}
 
-		w.Write([]byte(songUrl))
+		w.Write([]byte(song.SongUrl))
 	}
 }
 
 func generateReqId() string {
 	return uuid.NewString()
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+func sendError(w http.ResponseWriter, msg string, status int) {
+	errResp := ErrorResponse{
+		Error: msg,
+	}
+
+	resp, _ := json.Marshal(errResp)
+	http.Error(w, string(resp), status)
 }

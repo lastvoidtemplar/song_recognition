@@ -32,15 +32,16 @@ func NewDB(dbPath string, logger *slog.Logger) (*DB, error) {
 	}, nil
 }
 
-func (db *DB) InsertSong(songUrl string, logger *slog.Logger) (int, error) {
-	res, err := db.db.Exec("INSERT INTO songs (song_url) VALUES (?)",
-		songUrl)
+func (db *DB) InsertSong(songTitle string, songUrl string, logger *slog.Logger) (int, error) {
+	res, err := db.db.Exec("INSERT INTO songs (song_title, song_url) VALUES (?, ?)",
+		songTitle, songUrl)
 
 	if err != nil {
 		logger.With(
+			slog.String("song_title", songTitle),
 			slog.String("song_url", songUrl),
 			slog.String("err", err.Error()),
-		).Debug("Error while inserting a song")
+		).Warn("Error while inserting a song")
 		return -1, err
 	}
 
@@ -48,11 +49,17 @@ func (db *DB) InsertSong(songUrl string, logger *slog.Logger) (int, error) {
 
 	if err != nil {
 		logger.With(
+			slog.String("song_title", songTitle),
 			slog.String("song_url", songUrl),
 			slog.String("err", err.Error()),
-		).Debug("Error while inserting a song")
+		).Warn("Error while inserting a song")
 		return -1, err
 	}
+
+	logger.With(
+		slog.Int("song_id", int(songId)),
+		slog.String("song_title", songTitle),
+	).Debug("Song was inserted successfully")
 
 	return int(songId), nil
 }
@@ -64,38 +71,145 @@ func (db *DB) InsertFingerprint(hash uint64, songId int, timestamp uint32, logge
 	if err != nil {
 		logger.With(
 			slog.String("hash", fmt.Sprintf("%x", hash)),
+			slog.Int("song_id", songId),
 			slog.String("err", err.Error()),
-		).Debug("Error while inserting a fingerprint")
+		).Warn("Error while inserting a fingerprint")
 		return err
 	}
+
+	// logger.With(
+	// 	slog.String("hash", fmt.Sprintf("%x", hash)),
+	// 	slog.Int("song_id", songId),
+	// ).Debug("FIngerprint was inserted successfully")
 
 	return nil
 }
 
-func (db *DB) GetSongUrl(songId int, logger *slog.Logger) (string, error) {
-	row := db.db.QueryRow("SELECT song_url FROM songs WHERE song_id = ?", songId)
+type Song struct {
+	SongId    int
+	SongTitle string
+	SongUrl   string
+}
+
+func (db *DB) GetSongsCount(logger *slog.Logger) (int, error) {
+	row := db.db.QueryRow("SELECT COUNT(song_id) FROM songs")
+
+	err := row.Err()
+	if err != nil {
+		logger.With(
+			slog.String("err", err.Error()),
+		).Warn("Error while getting songs count")
+		return 0, err
+	}
+
+	var count int
+	err = row.Scan(&count)
+
+	if err != nil {
+		logger.With(
+			slog.String("err", err.Error()),
+		).Warn("Error while getting songs count")
+		return 0, err
+	}
+
+	logger.With(
+		slog.Int("songs_count", count),
+	).Debug("Songs count was got successfully")
+
+	return count, nil
+}
+
+func (db *DB) GetSongsPagination(page int, limit int, logger *slog.Logger) ([]Song, error) {
+	rows, err := db.db.Query("SELECT song_id, song_title, song_url FROM songs LIMIT ? OFFSET ?", limit, (page-1)*limit)
+
+	if err != nil {
+		logger.With(
+			slog.Int("page", page),
+			slog.Int("limit", limit),
+			slog.String("err", err.Error()),
+		).Warn("Error while getting songs with pagination")
+		return nil, err
+	}
+
+	songs := make([]Song, 0)
+	for rows.Next() {
+		var song Song
+		err := rows.Scan(&song.SongId, &song.SongTitle, &song.SongUrl)
+
+		if err != nil {
+			logger.With(
+				slog.Int("page", page),
+				slog.Int("limit", limit),
+				slog.String("err", err.Error()),
+			).Warn("Error while getting songs with pagination")
+			return nil, err
+		}
+		songs = append(songs, song)
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.With(
+			slog.Int("page", page),
+			slog.Int("limit", limit),
+			slog.String("err", err.Error()),
+		).Warn("Error while getting songs with pagination")
+		return nil, err
+	}
+
+	logger.With(
+		slog.Int("page", page),
+		slog.Int("limit", limit),
+	).Debug("Songs was paginated successfully")
+
+	return songs, nil
+}
+
+func (db *DB) CheckSongByUrl(songUrl string, logger *slog.Logger) (bool, error) {
+	row := db.db.QueryRow("SELECT 1 FROM songs WHERE song_url = ?", songUrl)
+
+	err := row.Err()
+	if err != nil {
+		logger.With(
+			slog.String("song_url", songUrl),
+			slog.String("err", err.Error()),
+		).Warn("Error while checking for song by song_url")
+		return false, err
+	}
+
+	var found bool
+	err = row.Scan(&found)
+
+	if err != nil {
+		return false, nil
+	}
+
+	return found, nil
+}
+
+func (db *DB) GetSongById(songId int, logger *slog.Logger) (Song, error) {
+	var song Song
+	row := db.db.QueryRow("SELECT song_id, song_title, song_url FROM songs WHERE song_id = ?", songId)
 
 	err := row.Err()
 	if err != nil {
 		logger.With(
 			slog.Int("song_id", songId),
 			slog.String("err", err.Error()),
-		).Debug("Error while inserting a fingerprint")
-		return "", err
+		).Warn("Error while getting song by song_id")
+		return song, err
 	}
 
-	songUrl := ""
-	err = row.Scan(&songUrl)
+	err = row.Scan(&song.SongId, &song.SongTitle, &song.SongUrl)
 
 	if err != nil {
 		logger.With(
 			slog.Int("song_id", songId),
 			slog.String("err", err.Error()),
-		).Debug("Error while inserting a fingerprint")
-		return "", err
+		).Warn("Error while getting a song by song_id")
+		return song, err
 	}
 
-	return songUrl, nil
+	return song, nil
 }
 
 type Fingerprint struct {
@@ -105,10 +219,9 @@ type Fingerprint struct {
 }
 
 func (db *DB) SearchFingerprints(hashes []uint64, logger *slog.Logger) (map[uint64][]Fingerprint, error) {
-	query := fmt.Sprintf("SELECT hash_key, song_id, song_timestamp FROM fingerprints WHERE hash_key IN (%s)", joinHashes(hashes))
-	rows, err := db.db.Query(query)
+	rows, err := db.db.Query("SELECT hash_key, song_id, song_timestamp FROM fingerprints WHERE hash_key IN (?)", hashes)
 	if err != nil {
-		logger.With(slog.String("err", err.Error())).Debug("Error while searching for fingerprints")
+		logger.With(slog.String("err", err.Error())).Warn("Error while searching for fingerprints")
 		return nil, err
 	}
 	defer rows.Close()
@@ -120,14 +233,14 @@ func (db *DB) SearchFingerprints(hashes []uint64, logger *slog.Logger) (map[uint
 		err = rows.Scan(&fingerprint.HashKey, &fingerprint.SongId, &fingerprint.Timestamp)
 
 		if err != nil {
-			logger.With(slog.String("err", err.Error())).Debug("Error while searching for fingerprints")
+			logger.With(slog.String("err", err.Error())).Warn("Error while searching for fingerprints")
 			return nil, err
 		}
 		matches[fingerprint.HashKey] = append(matches[fingerprint.HashKey], fingerprint)
 	}
 
 	if err = rows.Err(); err != nil {
-		logger.With(slog.String("err", err.Error())).Debug("Error while searching for fingerprints")
+		logger.With(slog.String("err", err.Error())).Warn("Error while searching for fingerprints")
 		return nil, err
 	}
 

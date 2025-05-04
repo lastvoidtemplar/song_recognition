@@ -1,7 +1,10 @@
 CREATE TABLE IF NOT EXISTS songs (
     song_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    song_title TEXT,
     song_url TEXT
 );
+
+CREATE  UNIQUE INDEX IF NOT EXISTS songs_song_url ON songs(song_url);
 
 CREATE TABLE IF NOT EXISTS fingerprints (
     fingerprint_id INTEGER PRIMARY KEY AUTOINCREMENT,
