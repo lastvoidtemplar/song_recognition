@@ -219,7 +219,9 @@ type Fingerprint struct {
 }
 
 func (db *DB) SearchFingerprints(hashes []uint64, logger *slog.Logger) (map[uint64][]Fingerprint, error) {
-	rows, err := db.db.Query("SELECT hash_key, song_id, song_timestamp FROM fingerprints WHERE hash_key IN (?)", hashes)
+	joined := joinHashes(hashes)
+	query := fmt.Sprintf("SELECT hash_key, song_id, song_timestamp FROM fingerprints WHERE hash_key IN (%s)", joined)
+	rows, err := db.db.Query(query)
 	if err != nil {
 		logger.With(slog.String("err", err.Error())).Warn("Error while searching for fingerprints")
 		return nil, err

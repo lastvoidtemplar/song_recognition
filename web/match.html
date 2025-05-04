@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Song Recognition</title>
     <link rel="stylesheet" href="navbar.css" />
+    <link rel="stylesheet" href="spinner.css" />
     <link rel="stylesheet" href="match.css" />
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -27,11 +28,12 @@
       <div id="timer">00.00</div>
       <dialog id="player-dialog">
         <div id="dialog-wrapper">
-          <h1>SABATON - The Red Baron (Official Lyric Video)</h1>
+          <div id="spinner" class="spinner" hidden></div>
+          <p id="error-dialog" hidden></p>
+          <h1 id="song-title" hidden>SABATON - The Red Baron (Official Lyric Video)</h1>
           <div id="player-wrapper">
             <iframe
               id="player"
-              src="https://www.youtube.com/embed/1snEYPg8TXs?si=px_DGULZaFp4G5Wh"
               title="YouTube video player"
               frameborder="0"
               referrerpolicy="strict-origin-when-cross-origin"

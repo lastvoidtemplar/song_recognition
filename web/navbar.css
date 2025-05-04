@@ -8,17 +8,27 @@
   }
 }
 
-header{
-    width: 100%;
+header {
+  width: 100%;
 }
 
-nav{
+nav {
   top: 0;
-  border: solid 0.5rem black;
   width: 100%;
   padding: 0.5rem;
-  font-size: var(--nav-font-size);
 
+  background-color: #009879;
+  
   display: flex;
   justify-content: space-evenly;
+}
+
+nav a {
+  color: #ffffff;
+  font-size: var(--nav-font-size);
+}
+
+nav a:visited {
+  color: #ffffff;
+  font-size: var(--nav-font-size);
 }

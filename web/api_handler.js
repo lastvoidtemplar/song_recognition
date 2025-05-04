@@ -16,7 +16,7 @@ export class ApiHandler {
   constructor(endpoint, method, body = undefined, timeoutInterval = 5000) {
     this.#endpoint = endpoint;
     this.#method = method;
-    this.#body = JSON.stringify(body);
+    this.#body = body
     this.#timeoutInterval = timeoutInterval;
     this.#countRetries = 0;
     this.#isFetching = false;

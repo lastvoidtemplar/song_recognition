@@ -103,7 +103,7 @@ type AddSongDTO struct {
 func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqId := generateReqId()
-		logger = logger.With(slog.String("request_id", reqId))
+		logger := logger.With(slog.String("request_id", reqId))
 
 		var dto AddSongDTO
 
@@ -181,14 +181,14 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqId := generateReqId()
-		logger = logger.With(slog.String("request_id", reqId))
+		logger := logger.With(slog.String("request_id", reqId))
 
 		r.ParseMultipartForm(10 << 20)
 
 		audio, headers, err := r.FormFile("audio")
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Debug("Failed to upload the webm file")
-			http.Error(w, "Failed to upload webm file", http.StatusBadRequest)
+			sendError(w, "Failed to upload webm file", http.StatusBadRequest)
 			return
 		}
 		defer audio.Close()
@@ -199,7 +199,7 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 			logger.With(
 				slog.String("err", err.Error()),
 			).Warn("Failed to create the webm file")
-			http.Error(w, "Internal Error", http.StatusInternalServerError)
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
@@ -209,7 +209,7 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 			logger.With(
 				slog.String("err", err.Error()),
 			).Warn("Failed to copy the webm file")
-			http.Error(w, "Internal Error", http.StatusInternalServerError)
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
 			return
 		}
 
@@ -217,7 +217,7 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Warn("Failed to convert the .webm to .wav")
-			http.Error(w, "Internal Error", http.StatusInternalServerError)
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
 			return
 		}
 
@@ -239,7 +239,7 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Warn("Failed to search the database for fingerprints")
-			http.Error(w, "Internal Error", http.StatusInternalServerError)
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
 			return
 		}
 
@@ -258,11 +258,30 @@ func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Log
 
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Warn("Failed to get song url from song id")
-			http.Error(w, "Internal Error", http.StatusInternalServerError)
+			http.Error(w, InternalServerErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		var dto ViewSongDTO
+
+		dto.SongId = song.SongId
+		dto.SongTitle = song.SongTitle
+		dto.SongUrl = song.SongUrl
+
+		logger.With(
+			slog.Int("song_id", matchSongId),
+			slog.Int("score", maxScore),
+		).Debug("Match recording successfully")
+
+		respBody, err := json.Marshal(dto)
+		if err != nil {
+			logger.With(
+				slog.String("err", err.Error()),
+			).Warn("Error while marshaling the response of the match song")
+			sendError(w, InternalServerErrorMsg, http.StatusInternalServerError)
 			return
 		}
 
-		w.Write([]byte(song.SongUrl))
+		w.Write(respBody)
 	}
 }
 

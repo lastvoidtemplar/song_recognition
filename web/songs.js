@@ -10,10 +10,10 @@ const errorDisplay = document.getElementById("error-display");
 const songsDialog = document.getElementById("songs-dialog");
 const songUrlInput = document.getElementById("song-url");
 const addSongBtn = document.getElementById("add-song");
-const errorDialog = document.getElementById("error-dialog")
+const errorDialog = document.getElementById("error-dialog");
 
-const apiUrl = window.location.origin
-const limit = 14
+const apiUrl = window.location.origin;
+const limit = 14;
 const url = new URL("/songs", apiUrl);
 
 const params = {
@@ -29,7 +29,6 @@ const songsHandler = new ApiHandler(url.toString());
 
 songsHandler.onLoading(() => {
   spinner.hidden = false;
-  console.log("loading");
 });
 
 songsHandler.onSuccess((data) => {
@@ -52,29 +51,27 @@ songsHandler.onError((statusCode, err) => {
 
 songsHandler.onFail((err) => {
   spinner.hidden = true;
-  errorDisplay.innerText = "Couldn`t fetch song database!";
+  errorDisplay.innerText = "Couldn`t connect to the server";
 });
 
 songsHandler.initiateFetch();
 
 function renderSongsTable(songs, limit) {
   songsTableBody.innerHTML = "";
-  
+
   for (let i = 0; i < limit; i++) {
     const node = document.createElement("tr");
     if (i < songs.length) {
       const song = songs[i];
       node.innerHTML = `<td>${song.song_id}.</td><td>${song.song_title}</td><td>${song.song_url}</td>`;
-    }else{
-      node.innerHTML = "<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>"
+    } else {
+      node.innerHTML = "<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>";
     }
     songsTableBody.append(node);
   }
 }
 
 function renderPager(page, pageCount) {
-  console.log(page, pageCount);
-
   pager.innerHTML = "";
 
   const min = Math.min(pageCount, 3);
@@ -147,7 +144,6 @@ function createOnClick(num) {
     pageHandler.onLoading(() => {
       spinner.hidden = false;
       songsTable.style.opacity = 0.5;
-      console.log("loading");
     });
 
     pageHandler.onSuccess((data) => {
@@ -168,36 +164,46 @@ function createOnClick(num) {
 function renderSongHeaders() {
   songsHeader.childNodes.forEach((el) => (el.hidden = false));
   openDialogButton.onclick = () => {
-    console.log("open");
-
+    errorDialog.innerText = ""
+    errorDialog.hidden = true
+    songUrlInput.value = ""
     songsDialog.showModal();
   };
 }
 
-songsDialog.onclick = (e)=>{
-  if (e.target === songsDialog){
-    errorDialog.innerText = ""
-    errorDialog.hidden = true
-    songsDialog.close()
+songsDialog.onclick = (e) => {
+  if (e.target === songsDialog) {
+    errorDialog.innerText = "";
+    errorDialog.hidden = true;
+    songsDialog.close();
   }
-}
+};
 
-addSongBtn.onclick = ()=>{
-  const songUrl = songUrlInput.value
+addSongBtn.onclick = () => {
+  const songUrl = songUrlInput.value;
 
-  const addSongHandler = new ApiHandler("/songs", "post", {
-    song_url: songUrl
-  })
+  const addSongHandler = new ApiHandler(
+    "/songs",
+    "post",
+    JSON.stringify({
+      song_url: songUrl,
+    })
+  );
 
-  addSongHandler.onSuccess((data)=>{
+  addSongHandler.onSuccess((data) => {
     console.log("Uploaded");
-    songsDialog.close()
-  })
+    songsDialog.close();
+  });
 
-  addSongHandler.onError((_, resp)=>{
-    errorDialog.innerText = resp.error
-    errorDialog.hidden = false
-  })
-  
-  addSongHandler.initiateFetch()
-}
+  addSongHandler.onError((_, err) => {
+    errorDialog.innerText = err.error;
+    errorDialog.hidden = false;
+  });
+
+  addSongHandler.onFail((err) => {
+    errorDialog.innerText = "Couldn`t connect to the server";
+    errorDialog.hidden = false;
+  });
+
+  addSongHandler.initiateFetch();
+};
