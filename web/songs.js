@@ -32,6 +32,12 @@ songsHandler.onLoading(() => {
 });
 
 songsHandler.onSuccess((data) => {
+  if (!data) {
+    spinner.hidden = true;
+    errorDisplay.innerText = "Couldn`t connect to the server";
+    return;
+  }
+
   spinner.hidden = true;
   songsTable.hidden = false;
   pager.hidden = false;
@@ -147,6 +153,12 @@ function createOnClick(num) {
     });
 
     pageHandler.onSuccess((data) => {
+      if (!data) {
+        spinner.hidden = true;
+        errorDisplay.innerText = "Couldn`t connect to the server";
+        return;
+      }
+
       spinner.hidden = true;
       songsTable.style.opacity = 1;
 
@@ -164,9 +176,9 @@ function createOnClick(num) {
 function renderSongHeaders() {
   songsHeader.childNodes.forEach((el) => (el.hidden = false));
   openDialogButton.onclick = () => {
-    errorDialog.innerText = ""
-    errorDialog.hidden = true
-    songUrlInput.value = ""
+    errorDialog.innerText = "";
+    errorDialog.hidden = true;
+    songUrlInput.value = "";
     songsDialog.showModal();
   };
 }

@@ -88,6 +88,13 @@ function setupMediaRecorder(mediaRecorder) {
     });
 
     matchHandler.onSuccess((data) => {
+      if (!data) {
+        spinner.hidden = true;
+        errorDialog.innerText = "Couldn`t connect to the server";
+        errorDialog.hidden = false
+        return;
+      }
+
       spinner.hidden = true;
 
       songTitle.innerText = data.song_title;
@@ -118,7 +125,7 @@ function clearDialog() {
   songTitle.innerText = "";
   songTitle.hidden = true;
   player.hidden = true;
-  player.src = ""
+  player.src = "";
 }
 
 function transformUrlToEmbedUrl(songUrl) {
