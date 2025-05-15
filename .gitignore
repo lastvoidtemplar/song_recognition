@@ -4,5 +4,6 @@ venv
 
 *.wav
 *.jpg
+tests
 
 db*

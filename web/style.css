@@ -26,4 +26,8 @@ main {
   flex-direction: column;
 }
 
+h1 {
+  color: #009879;
+}
+
 
