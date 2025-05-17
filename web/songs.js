@@ -1,4 +1,5 @@
 import { ApiHandler } from "./api_handler.js";
+import {API_URL} from "./api_url.js"
 
 const songsHeader = document.getElementById("songs-header");
 const openDialogButton = document.getElementById("open-dialog");
@@ -12,7 +13,7 @@ const songUrlInput = document.getElementById("song-url");
 const addSongBtn = document.getElementById("add-song");
 const errorDialog = document.getElementById("error-dialog");
 
-const apiUrl = window.location.origin;
+const apiUrl = API_URL;
 const limit = 14;
 const url = new URL("/songs", apiUrl);
 

@@ -1,4 +1,5 @@
 import { ApiHandler } from "./api_handler.js";
+import {API_URL} from "./api_url.js"
 
 const micBtn = document.getElementById("mic");
 const timer = document.getElementById("timer");
@@ -9,7 +10,7 @@ const songTitle = document.getElementById("song-title");
 const player = document.getElementById("player");
 const errorDialog = document.getElementById("error-dialog");
 
-const apiUrl = window.location.origin;
+const apiUrl = API_URL;
 const recordingTime = 20_000;
 const timerStep = 40;
 
