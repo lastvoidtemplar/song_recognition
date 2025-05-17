@@ -9,3 +9,5 @@ venv
 tests
 
 db*
+
+cookies*

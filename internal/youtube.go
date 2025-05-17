@@ -80,6 +80,7 @@ func (downloader *ytdlpDownloader) DownloadWav(rawUrl string, logger *slog.Logge
 		"--print", `after_move:"%(filepath)s"`,
 		"-x",
 		"--audio-format", "wav",
+		"--cookies", "cookies.txt",
 		"-o", filepath.Join(downloader.outputDir, "%(title)s.%(ext)s"),
 		"--postprocessor-args", "-ac 1",
 		rawUrl,
