@@ -54,7 +54,10 @@ func main() {
 	if !production {
 		http.ListenAndServe(":3000", handler)
 	} else {
-		http.ListenAndServe(":80", handler)
+		err := http.ListenAndServe(":80", handler)
+		if err != nil {
+			logger.Error(err.Error())
+		}
 	}
 }
 
