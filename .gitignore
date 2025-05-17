@@ -9,5 +9,6 @@ venv
 tests
 
 db*
+web/api_url.js
 
 cookies*
