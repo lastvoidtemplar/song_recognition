@@ -32,6 +32,37 @@ func NewDB(dbPath string, logger *slog.Logger) (*DB, error) {
 	}, nil
 }
 
+func (db *DB) SetupDB(logger *slog.Logger) error {
+	_, err := db.db.Exec(`CREATE TABLE IF NOT EXISTS songs (
+    song_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    song_title TEXT,
+    song_url TEXT
+);
+
+CREATE  UNIQUE INDEX IF NOT EXISTS songs_song_url ON songs(song_url);
+
+CREATE TABLE IF NOT EXISTS fingerprints (
+    fingerprint_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hash_key INTEGER NOT NULL,
+    song_id TEXT NOT NULL,
+    song_timestamp INTEGER NOT NULL,
+    FOREIGN KEY(song_id) REFERENCES songs(song_id)
+);
+
+CREATE INDEX IF NOT EXISTS fingerprints_hash_key ON fingerprints(hash_key);`)
+
+	if err != nil {
+		logger.With(
+			slog.String("err", err.Error()),
+		).Error("Error while setuping the db")
+		return err
+	}
+
+	logger.Info("Db setup successfully")
+
+	return err
+}
+
 func (db *DB) InsertSong(songTitle string, songUrl string, logger *slog.Logger) (int, error) {
 	res, err := db.db.Exec("INSERT INTO songs (song_title, song_url) VALUES (?, ?)",
 		songTitle, songUrl)
