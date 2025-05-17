@@ -37,13 +37,14 @@ tar -C /usr/local -xzf /tmp/go.tar.gz
 rm /tmp/go.tar.gz
 
 export PATH=$PATH:/usr/local/go/bin
+export GOPATH=/root/go
+export GOCACHE=/root/.cache/go-build
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /root/.bash_profile
-
-go version > res.txt
-
+echo 'export GOPATH=/root/go' >> /root/.bash_profile
+echo 'export GOCACHE=/root/.cache/go-build' >> /root/.bash_profile
 
 mkdir downloads
 mkdir uploads
 
-CGO_ENABLED=1 go build cmd/main.go cmd/routes.go
-./main -env
+CGO_ENABLED=1 go build -o main cmd/main.go cmd/routes.go 2> build.log
+./main -env 2> run.log
