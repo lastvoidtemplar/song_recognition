@@ -11,16 +11,38 @@ import (
 
 func main() {
 	var production bool
-	flag.BoolVar(&production, "env", false, "Set environments to production")
+	flag.BoolVar(&production, "prod", false, "Set environments to production")
 
 	logger := internal.NewLogger()
 
 	flag.Parse()
 
-	db, err := internal.NewDB("db.sqlite", logger)
-	if err != nil {
-		logger.With(slog.String("err", err.Error())).Error("Failed to create a DB")
-		return
+	var db internal.DB
+	var err error
+	if !production {
+		db, err = internal.NewDBSqlite("db.sqlite", logger)
+		if err != nil {
+			logger.With(slog.String("err", err.Error())).Error("Failed to create a DB")
+			return
+		}
+	} else {
+		awsClient, err := internal.NewAWSClient(logger)
+		if err != nil {
+			logger.With(slog.String("err", err.Error())).Error("Failed to create a AWS client")
+			return
+		}
+
+		options, err := awsClient.LoadMysqlDBParameters(logger)
+		if err != nil {
+			logger.With(slog.String("err", err.Error())).Error("Failed to extracting MySql connection options")
+			return
+		}
+
+		db, err = internal.NewDBMysql(options, logger)
+		if err != nil {
+			logger.With(slog.String("err", err.Error())).Error("Failed to create a DB")
+			return
+		}
 	}
 
 	err = db.SetupDB(logger)

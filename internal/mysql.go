@@ -12,10 +12,18 @@ type DBSMySql struct {
 	db *sql.DB
 }
 
-func NewDBMysql(dbUrl string, dbPort string, dbUsername string, dbPassword string, dbName string, logger *slog.Logger) (DB, error) {
-	loggerNew := logger.With(slog.String("db_url", dbUrl), slog.String("db_name", dbName))
+type DBMySqlConnectionOption struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+	DBName   string
+}
 
-	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUsername, dbPassword, dbUrl, dbPort, dbName)
+func NewDBMysql(options DBMySqlConnectionOption, logger *slog.Logger) (DB, error) {
+	loggerNew := logger.With(slog.String("db_host", options.Host), slog.String("db_name", options.DBName))
+
+	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", options.Username, options.Password, options.Host, options.Port, options.DBName)
 	db, err := sql.Open("mysql", connectionString)
 
 	if err != nil {
