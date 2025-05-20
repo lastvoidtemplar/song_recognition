@@ -196,7 +196,7 @@ addSongBtn.onclick = () => {
   const songUrl = songUrlInput.value;
 
   const addSongHandler = new ApiHandler(
-    "/songs",
+    url,
     "post",
     JSON.stringify({
       song_url: songUrl,
