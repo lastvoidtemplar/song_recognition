@@ -50,6 +50,7 @@ func main() {
 	}
 
 	handler := withCORS(mux)
+	handler = createLoggingMiddleware(handler, logger)
 
 	if !production {
 		http.ListenAndServe(":3000", handler)
@@ -71,6 +72,13 @@ func withCORS(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+func createLoggingMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Debug(fmt.Sprintf("Request Path: %s, Query Params: %s", r.URL.Path, r.URL.RawQuery))
 
 		next.ServeHTTP(w, r)
 	})

@@ -47,4 +47,4 @@ mkdir downloads
 mkdir uploads
 
 CGO_ENABLED=1 go build -o main cmd/main.go cmd/routes.go 2> build.log
-./main -env 2> run.log
+./main -env > run.log
