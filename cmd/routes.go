@@ -30,7 +30,7 @@ type ViewSongDTO struct {
 	SongUrl   string `json:"song_url"`
 }
 
-func createGetSongsPaginationHandler(db *internal.DB, logger *slog.Logger) http.HandlerFunc {
+func createGetSongsPaginationHandler(db internal.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqId := generateReqId()
 		logger := logger.With(slog.String("request_id", reqId))
@@ -100,7 +100,7 @@ type AddSongDTO struct {
 	SongUrl string `json:"song_url"`
 }
 
-func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB, logger *slog.Logger) http.HandlerFunc {
+func createAddSongHandler(downloader internal.YouTubeDownloader, db internal.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqId := generateReqId()
 		logger := logger.With(slog.String("request_id", reqId))
@@ -178,7 +178,7 @@ func createAddSongHandler(downloader internal.YouTubeDownloader, db *internal.DB
 	}
 }
 
-func createMatchSongHandler(uploadPath string, db *internal.DB, logger *slog.Logger) http.HandlerFunc {
+func createMatchSongHandler(uploadPath string, db internal.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqId := generateReqId()
 		logger := logger.With(slog.String("request_id", reqId))
