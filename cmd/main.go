@@ -11,7 +11,9 @@ import (
 
 func main() {
 	var production bool
+	var region string
 	flag.BoolVar(&production, "prod", false, "Set environments to production")
+	flag.StringVar(&region, "region", "eu-central-1", "Set the aws region")
 
 	logger := internal.NewLogger()
 
@@ -26,7 +28,7 @@ func main() {
 			return
 		}
 	} else {
-		awsClient, err := internal.NewAWSClient(logger)
+		awsClient, err := internal.NewAWSClient(region, logger)
 		if err != nil {
 			logger.With(slog.String("err", err.Error())).Error("Failed to create a AWS client")
 			return

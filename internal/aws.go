@@ -12,10 +12,10 @@ type AWSClient struct {
 	ssmClient *ssm.Client
 }
 
-func NewAWSClient(logger *slog.Logger) (*AWSClient, error) {
+func NewAWSClient(region string, logger *slog.Logger) (*AWSClient, error) {
 	ctx := context.Background()
 
-	conf, err := config.LoadDefaultConfig(ctx)
+	conf, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 
 	if err != nil {
 		logger.With(slog.String("err", err.Error())).Error("Error while loading default config")
