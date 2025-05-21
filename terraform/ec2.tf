@@ -13,12 +13,20 @@ resource "aws_instance" "audio_backend_web_api" {
   tags = {
     Name = "audio-backend-web-api"
   }
+
+  depends_on = [
+    aws_ssm_parameter.cookies_txt,
+    aws_ssm_parameter.rds_host,
+    aws_ssm_parameter.rds_port,
+    aws_ssm_parameter.db_username,
+    aws_ssm_parameter.db_password,
+    aws_ssm_parameter.db_name
+  ]
 }
 
 
 resource "aws_security_group" "web_api_security_group" {
   name        = "web-api-security-group"
-  description = "Allow ingress HTTP and egress "
   vpc_id      = aws_vpc.audio_backend_vpc.id
 
   ingress {
@@ -62,13 +70,29 @@ resource "aws_iam_role" "ssm_role" {
 }
 
 resource "aws_iam_policy" "ssm_read_cookies_policy" {
-  name   = "ReadWelcomeTxt"
+  name   = "read-cookies-txt"
   policy = jsonencode({
     Version : "2012-10-17",
     Statement : [{
       Effect   : "Allow",
       Action   : "ssm:GetParameter",
       Resource : aws_ssm_parameter.cookies_txt.arn
+    }]
+  })
+}
+
+resource "aws_iam_policy" "ssm_read_db_connection_policy" {
+  name   = "read-db-connection"
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [{
+      Effect   : "Allow",
+      Action   : [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      Resource : "arn:aws:ssm:*:*:parameter/rds*"
     }]
   })
 }
@@ -81,6 +105,11 @@ resource "aws_iam_role_policy_attachment" "ssm_policy_ssm_managed_attachment" {
 resource "aws_iam_role_policy_attachment" "ssm_policy_ssm_cookies_attachment" {
   role       = aws_iam_role.ssm_role.name
   policy_arn = aws_iam_policy.ssm_read_cookies_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy_ssm_db_connections_attachment" {
+  role       = aws_iam_role.ssm_role.name
+  policy_arn = aws_iam_policy.ssm_read_db_connection_policy.arn
 }
 
 resource "aws_iam_instance_profile" "ssm_instance_profile" {
