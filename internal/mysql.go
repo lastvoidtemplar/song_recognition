@@ -53,9 +53,9 @@ func (db *DBSMySql) SetupDB(logger *slog.Logger) error {
 
 	_, err = db.db.Exec(`CREATE TABLE IF NOT EXISTS fingerprints (
     fingerprint_id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    hash_key INTEGER NOT NULL,
+    hash_key BIGINT NOT NULL,
     song_id INTEGER NOT NULL,
-    song_timestamp INTEGER NOT NULL,
+    song_timestamp BIGINT NOT NULL,
     FOREIGN KEY(song_id) REFERENCES songs(song_id)
 	);`)
 
