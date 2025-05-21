@@ -1,6 +1,6 @@
 resource "aws_instance" "audio_backend_web_api" {
   ami           = "ami-0ef32de3e8ab0640e"
-  instance_type = "t2.micro"
+  instance_type = "t2.medium"
   subnet_id     = aws_subnet.public_subnet_1.id
 
   vpc_security_group_ids = [aws_security_group.web_api_security_group.id]

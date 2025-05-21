@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "frontend_s3" {
-  bucket = "lastvoidtemplar-songrecognition-frontend-bucket"
+  bucket = "lastvoidtemplar-songrecognition-frontend-bucket-111"
   
   force_destroy = true
 
