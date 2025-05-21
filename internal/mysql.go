@@ -110,7 +110,7 @@ func (db *DBSMySql) SetupDB(logger *slog.Logger) error {
 	}
 
 	if existsFingerprintsHashKeyIndex == 0 {
-		createFingerprintsHashKeyIndexQuery := "CREATE UNIQUE INDEX fingerprints_hash_key_index ON fingerprints(hash_key)"
+		createFingerprintsHashKeyIndexQuery := "CREATE INDEX fingerprints_hash_key_index ON fingerprints(hash_key)"
 		_, err = db.db.Exec(createFingerprintsHashKeyIndexQuery)
 		if err != nil {
 			logger.With(
